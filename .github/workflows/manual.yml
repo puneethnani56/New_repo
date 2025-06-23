@@ -16,6 +16,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout code
+        uses: actions/checkout@v4 
       - name: Verify inputs
         if: ${{ github.event.inputs.confirm != 'yes' }}
         run: exit 1  # Fail if not confirmed
