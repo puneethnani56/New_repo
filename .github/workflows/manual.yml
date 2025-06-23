@@ -1,0 +1,24 @@
+name: Manual Deploy
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        required: true
+        type: choice
+        options: [staging, production]
+      confirm:
+        description: 'Type "yes" to confirm'
+        required: true
+        default: 'no'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify inputs
+        if: ${{ github.event.inputs.confirm != 'yes' }}
+        run: exit 1  # Fail if not confirmed
+
+      - name: Deploy
+        run: ./deploy.sh ${{ github.event.inputs.environment }}
