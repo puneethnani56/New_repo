@@ -1,4 +1,4 @@
-import note 
+from note import sum_list_elements
 import unittest
 
 class TestSumListElements(unittest.TestCase):
