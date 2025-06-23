@@ -1,8 +1,21 @@
-from note import list_sum  # replace `your_module` with the actual file name (without `.py`)
+import unittest
 
-a = list(range(1, 100, 2))  # [1, 3, 5, ..., 99]
-expected = list_sum(a)  # built-in sum for validation
-def test_custom_sum(l):
-    expected = sum(l)
-    return expected
-assert test_custom_sum(a) == sum(list_sum(a))
+class TestSumListElements(unittest.TestCase):
+    
+    def test_positive_numbers(self):
+        self.assertEqual(sum_list_elements([1, 2, 3, 4, 5]), 15)
+
+    def test_negative_numbers(self):
+        self.assertEqual(sum_list_elements([-1, -2, -3]), -6)
+
+    def test_mixed_numbers(self):
+        self.assertEqual(sum_list_elements([10, -5, 3, -8]), 0)
+
+    def test_empty_list(self):
+        self.assertEqual(sum_list_elements([]), 0)
+
+    def test_single_element(self):
+        self.assertEqual(sum_list_elements([42]), 42)
+
+if __name__ == '__main__':
+    unittest.main()
