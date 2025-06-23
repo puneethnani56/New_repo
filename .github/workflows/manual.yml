@@ -19,6 +19,7 @@ jobs:
       - name: Verify inputs
         if: ${{ github.event.inputs.confirm != 'yes' }}
         run: exit 1  # Fail if not confirmed
-
+      - name: Make script executable
+        run: chmod +x ./deploy.sh
       - name: Deploy
-        run: ./deploy.sh ${{ github.event.inputs.environment }}
+        run: deploy.sh ${{ github.event.inputs.environment }}
