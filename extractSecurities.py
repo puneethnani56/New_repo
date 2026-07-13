@@ -517,6 +517,53 @@ def _process_single_file(file_input_path: str, file_config: dict, ind_output: st
     return security_df, pricing_df
 
 
+def _validate_and_load_params() -> tuple:
+    """
+    Load and validate all required configuration parameters for the extract task.
+    Returns (input_path, output_path, filenames_list, file_pattern, ind_output).
+    Raises FileNotFoundError, LookupError, or ValueError if any required config is missing.
+    """
+    input_params = dbm.get_output_params(app_name, task_name, 'Bloomberg_securities_input_path')
+    logger.info(f"{logger_prefix} Bloomberg_securities_input_path config params : {input_params}")
+
+    input_path = input_params[0][1] if input_params[0][1] else None
+
+    if not input_path:
+        logger.error(f"{logger_prefix} Input path not exists for config : Bloomberg_securities_input_path on ts_task_output_params table. exiting..")
+        raise FileNotFoundError("Input path not exists for config : Bloomberg_securities_input_path on ts_task_output_params table. exiting.")
+    else:
+        logger.info(f"{logger_prefix} Bloomberg Securities Input path : {input_path}")
+
+    output_params = dbm.get_output_params(app_name, task_name, 'Bloomberg_securities_output_path')
+    logger.info(f"{logger_prefix} Bloomberg_securities_output_path config params : {output_params}")
+
+    output_path = output_params[0][1] if output_params[0][1] else None
+
+    if not output_path:
+        logger.error(f"{logger_prefix} Output path not exists for config : Bloomberg_securities_output_path on ts_task_output_params table. exiting..")
+        raise FileNotFoundError("Output path not exists for config : Bloomberg_securities_output_path on ts_task_output_params table. exiting.")
+    else:
+        logger.info(f"{logger_prefix} Bloomberg Securities Output path : {output_path}")
+
+    position_filenames = dbm.get_app_config_param(app_name, task_name, 'Bloomberg_filewait_lookup')
+    logger.info(f"{logger_prefix} position_filenames : {position_filenames}")
+
+    indfile_output = dbm.get_app_config_param(app_name, task_name, 'Bloomberg_extract_ind_output')
+    ind_output = indfile_output.get('indOutput', 'no')
+    logger.info(f"{logger_prefix} individual output : {ind_output}")
+
+    filenames_list = [item['name'] for item in position_filenames['bloombergFileLookups']]
+    logger.info(f"{logger_prefix} filenames_list : {filenames_list}")
+
+    file_pattern = dbm.get_file_pattern(app_name, task_name)
+    if file_pattern:
+        logger.info(f"{logger_prefix} File Pattern for task : {task_name} - {file_pattern}")
+    else:
+        raise ValueError(f"No file pattern found for task : {task_name}.")
+
+    return input_path, output_path, filenames_list, file_pattern, ind_output
+
+
 def main():
 
     try:
@@ -539,43 +586,7 @@ def main():
         logger.info(f"{logger_prefix} Started executing task : {task_name} for application : {app_name} with Dag Referene : {dag_ref}...")
 
         logger.info(f"{logger_prefix} Collecting path config for position files.")
-        input_params = dbm.get_output_params(app_name, task_name, 'Bloomberg_securities_input_path')
-        logger.info(f"{logger_prefix} Bloomberg_securities_input_path config params : {input_params}")
-
-        input_path = input_params[0][1] if input_params[0][1] else None
-
-        if not input_path:
-            logger.error(f"{logger_prefix} Input path not exists for config : Bloomberg_securities_input_path on ts_task_output_params table. exiting..")
-            raise FileNotFoundError("Input path not exists for config : Bloomberg_securities_input_path on ts_task_output_params table. exiting.")
-        else:
-            logger.info(f"{logger_prefix} Bloomberg Securities Input path : {input_path}")
-
-        output_params = dbm.get_output_params(app_name, task_name, 'Bloomberg_securities_output_path')
-        logger.info(f"{logger_prefix} Bloomberg_securities_output_path config params : {output_params}")
-
-        output_path = output_params[0][1] if output_params[0][1] else None
-
-        if not output_path:
-            logger.error(f"{logger_prefix} Output path not exists for config : Bloomberg_securities_output_path on ts_task_output_params table. exiting..")
-            raise FileNotFoundError("Output path not exists for config : Bloomberg_securities_output_path on ts_task_output_params table. exiting.")
-        else:
-            logger.info(f"{logger_prefix} Bloomberg Securities Output path : {output_path}")
-
-        position_filenames=dbm.get_app_config_param(app_name, task_name, 'Bloomberg_filewait_lookup')
-        logger.info(f"{logger_prefix} position_filenames : {position_filenames}")
-
-        indfile_output=dbm.get_app_config_param(app_name, task_name, 'Bloomberg_extract_ind_output')
-        ind_output=indfile_output.get('indOutput', 'no')
-        logger.info(f"{logger_prefix} individual output : {ind_output}")
-
-        filenames_list=[item['name'] for item in position_filenames['bloombergFileLookups']]
-        logger.info(f"{logger_prefix} filenames_list : {filenames_list}")
-
-        file_pattern=dbm.get_file_pattern(app_name, task_name)
-        if file_pattern:
-            logger.info(f"{logger_prefix} File Pattern for task : {task_name} - {file_pattern}")
-        else:
-            raise ValueError(f"No file pattern found for task : {task_name}.")
+        input_path, output_path, filenames_list, file_pattern, ind_output = _validate_and_load_params()
 
         # initialize a dictionary to store the final results
         logger.info(f"{logger_prefix} Creating empty dataframe.")
